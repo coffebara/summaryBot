@@ -1,0 +1,15 @@
+tesseract:
+  dataPath: C:/Program Files/Tesseract-OCR/tessdata/
+
+adb:
+  targetPackage: com.lilithgames.rok.gpkr
+  localDirectory: /summaryBot/
+  deviceDirectory: /sdcard/Pictures/Screenshots/
+
+excel:
+  path: C:/summaryBot/summaryBot.xlsx
+
+spring:
+  profiles:
+    include:
+      - "secret"

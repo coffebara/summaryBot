@@ -1,0 +1,63 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.3'
+    id 'io.spring.dependency-management' version '1.1.6'
+}
+
+group = 'com.coffebara'
+version = '0.4.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+//    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+//    runtimeOnly 'com.mysql:mysql-connector-j' // 개발 환경
+    implementation 'org.springframework.boot:spring-boot-starter'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // Tesseract
+    implementation 'net.sourceforge.tess4j:tess4j:5.13.0'
+    //	openCV
+	implementation fileTree(dir:'libs', includes: ['*jar'])
+    // Excel
+    implementation 'org.apache.poi:poi-ooxml:5.2.3'
+
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+//클립보드 접근을 위한 headless 설정
+tasks.withType(JavaExec).configureEach {
+    jvmArgs '-Djava.awt.headless=false'
+}
+
+test {
+    useJUnitPlatform()
+
+    // JVM 옵션 설정
+    jvmArgs '-Djava.awt.headless=false'
+
+    // 테스트 로그 출력 (선택 사항)
+    testLogging {
+        events "passed", "failed", "skipped"
+    }
+}
