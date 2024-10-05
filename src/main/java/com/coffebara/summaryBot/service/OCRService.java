@@ -25,14 +25,16 @@ public class OCRService {
 
 
         for (Member member : memberList) {
+            log.info(member.getRanking() + " 위 데이터 추출중...");
+
             String mainImg = member.getMainImg();
             String detailImg1 = member.getDetailImg1();
             String detailImg2 = member.getDetailImg2();
             String timestamp = new SimpleDateFormat("yyyyMMdd").format(new Date());
             String localDirectory = adbManager.getLocalDirectory();
-            String mainImagePath = "C:" +localDirectory + timestamp + "/" + mainImg;
-            String detailImagePath1 = "C:" +localDirectory + timestamp + "/" + detailImg1;
-            String detailImagePath2 = "C:" +localDirectory + timestamp + "/" + detailImg2;
+            String mainImagePath = "C:" + localDirectory + timestamp + "/" + mainImg;
+            String detailImagePath1 = "C:" + localDirectory + timestamp + "/" + detailImg1;
+            String detailImagePath2 = "C:" + localDirectory + timestamp + "/" + detailImg2;
 
             int userIdCode = Integer.parseInt(ocrManager.getUserIdCode(mainImagePath));
             List<Object> userDataList = ocrManager.getUserMainDataList(mainImagePath);
@@ -40,7 +42,7 @@ public class OCRService {
             int power = 0;
             int totalKillPoint = 0;
             for (int i = 0; i < userDataList.size(); i++) {
-                ally = (String) userDataList.get(0);
+                ally = userDataList.get(0) == null ? "" : (String) userDataList.get(0);
                 power = (int) userDataList.get(1);
                 totalKillPoint = (int) userDataList.get(2);
             }

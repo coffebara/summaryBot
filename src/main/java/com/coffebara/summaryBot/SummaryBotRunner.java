@@ -1,14 +1,13 @@
 package com.coffebara.summaryBot;
 
 import com.coffebara.summaryBot.service.ADBService;
+import com.coffebara.summaryBot.service.ExcelService;
 import com.coffebara.summaryBot.service.OCRService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
-
-import static com.coffebara.summaryBot.service.ADBService.memberList;
 
 @Slf4j
 @Component
@@ -17,6 +16,7 @@ public class SummaryBotRunner implements ApplicationRunner {
 
     private final ADBService adbService;
     private final OCRService ocrService;
+    private final ExcelService excelService;
 
     //공통 예외 처리
     private static void exceptionHandler(Exception e) {
@@ -30,16 +30,26 @@ public class SummaryBotRunner implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         log.info("메크로 실행중...");
+        long startTime = System.currentTimeMillis();
+        long endTime;
 
         try {
             adbService.takeScreenShot();
+            log.info("스크린샷 완료.");
+
             ocrService.ExtractData();
-            System.out.println("memberList = " + memberList);
+            log.info("OCR 데이터 추출 완료.");
+
+            excelService.saveMembersToExcel();
+            log.info("엑셀에 데이터 저장 완료.");
+
+            endTime = System.currentTimeMillis();
+            log.info("메크로 실행 완료! 소요 시간: " + (endTime - startTime) + "ms");
+
         } catch (Exception e) {
             exceptionHandler(e);
         }
 
-        log.info("메크로 실행 완료!");
     }
 
 

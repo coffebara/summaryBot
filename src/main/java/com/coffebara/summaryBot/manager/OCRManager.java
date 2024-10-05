@@ -27,9 +27,13 @@ public class OCRManager {
         Mat cropImg = OpenCVUtil.cropSquare(imagePath, deathCoords);
         Mat zoomImage = OpenCVUtil.zoomImage(cropImg);
         BufferedImage bufferedImage = OpenCVUtil.matToBufferedImage(zoomImage);
-        String data = readData(bufferedImage).trim();
+        String data = readData(bufferedImage).trim().replace(",", "");
+        if (data.isEmpty()) {
+            return 0;
+        }
 
-        return Integer.parseInt(data.replace(",", ""));
+
+        return Integer.parseInt(data);
     }
 
     public String getUserIdCode(String imagePath) {
@@ -70,8 +74,12 @@ public class OCRManager {
         String killPointData = readData(bufferedKillPointImg).trim();
 
         String allyTrimmed = allyData.trim();
-        int lastIndex = allyTrimmed.indexOf(']');
-        String ally = allyTrimmed.substring(1, lastIndex - 1);
+        String ally = "";
+        if (!allyTrimmed.isEmpty()) {
+            int lastIndex = allyTrimmed.indexOf(']');
+            ally = allyTrimmed.substring(1, lastIndex);
+            log.info("ally = " + ally);
+        }
         list.add(ally);
 
         list.add(Integer.parseInt(powerData.trim().replace(",", "")));
@@ -85,24 +93,42 @@ public class OCRManager {
     }
 
     public List<Integer> getUserDetailDataList(String imagePath) {
-        final int[] memberIdCoords = new int[]{860, 551, 983, 640}; // 이미지속 가져올 좌표
+        final int[] memberIdCoords = new int[]{862, 563, 979, 635}; // 이미지속 가져올 좌표
         List<Integer> list = new ArrayList<>();
 
         Mat cropImg = OpenCVUtil.cropSquare(imagePath, memberIdCoords);
         Mat zoomImage = OpenCVUtil.zoomImage(cropImg);
 
-//        Imgcodecs.imwrite("C:\\summaryBot\\20240922\\dddd.png", zoomImage);
+        Imgcodecs.imwrite("C:\\summaryBot\\20240922\\dddd.png", zoomImage);
 
         BufferedImage bufferedImage = OpenCVUtil.matToBufferedImage(zoomImage);
         String data = readData(bufferedImage).trim();
-        System.out.println("data = " + data);
-        String[] split = data.split("\\n");
-        for (String s : split) {
-            String trimmed = s.trim();
-            if (!trimmed.isEmpty()) {
-                list.add(Integer.valueOf(trimmed.replace(",", "")));
+
+        //1. 0,0 일 때
+        if (data.isEmpty()) {
+            list.add(0);
+            list.add(0);
+            return list;
+        } else {
+            String[] split = data.split("\\n");
+            if (split.length == 2) {
+                for (String s : split) {
+                    String trimmed = s.trim();
+                    if (!trimmed.isEmpty()) {
+                        list.add(Integer.valueOf(trimmed.replace(",", "")));
+                    }
+                }
+            } else {
+                for (String s : split) {
+                    String trimmed = s.trim();
+                    if (!trimmed.isEmpty()) {
+                        list.add(Integer.valueOf(trimmed.replace(",", "")));
+                    }
+                    list.add(0);
+                }
             }
         }
+
 
         return list;
     }

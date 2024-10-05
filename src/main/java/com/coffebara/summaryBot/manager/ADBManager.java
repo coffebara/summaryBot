@@ -129,7 +129,7 @@ public class ADBManager {
             System.out.println(line);
         }
 
-        Thread.sleep(500);
+        Thread.sleep(220);
     }
 
     public void startApp() throws IOException, InterruptedException {

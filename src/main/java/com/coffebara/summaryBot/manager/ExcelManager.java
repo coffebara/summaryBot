@@ -4,7 +4,10 @@ import com.coffebara.summaryBot.config.ExcelConfig;
 import com.coffebara.summaryBot.entity.Member;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
 
@@ -22,7 +25,7 @@ public class ExcelManager {
     private final ExcelConfig excelConfig;
 
     // 엑셀 파일에서 name과 idCode를 찾아 데이터를 업데이트하거나 새로 추가
-    public void updateOrInsertMemberData(List<Member> memberList) {
+    public void handleMemberData(List<Member> memberList) {
         File excelFile = new File(excelConfig.getExcelPath());
 
         try {
@@ -32,38 +35,31 @@ public class ExcelManager {
                 return; // 파일 잠금 해제가 실패했으므로 메서드 종료
             }
 
-            try (FileInputStream fis = new FileInputStream(excelFile);
-                 Workbook workbook = new XSSFWorkbook(fis)) {
+            try (FileInputStream fis = new FileInputStream(excelFile); Workbook workbook = new XSSFWorkbook(fis)) {
 
-                Sheet sheet = workbook.getSheetAt(0); // 첫 번째 시트 선택
+                Sheet targetSheet;
 
-                for (Member member : memberList) {
-                    boolean isUpdated = false; // 멤버별로 isUpdated 상태 관리
+                // 1. 시트가 하나인 경우
+                if (workbook.getNumberOfSheets() == 1) {
+                    // 첫 번째 시트에 name과 idCode를 입력
+                    Sheet firstSheet = workbook.getSheetAt(0);
+                    log.info("첫 번째 시트에 name과 idCode 입력.");
+                    insertFirstMemberDataToSheet(firstSheet, memberList); // 첫 번째 시트에 name과 idCode 입력
 
-                    // 첫 번째 행부터 name과 idCode가 있는지 확인
-                    for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
-                        Row row = sheet.getRow(rowIndex);
-                        if (row != null) {
-                            Cell nameCell = row.getCell(0); // Name 열 (0번 열)
-                            Cell idCodeCell = row.getCell(1); // ID Code 열 (1번 열)
+                    // 'before'라는 이름의 시트를 생성
+                    targetSheet = workbook.createSheet("before");
+                    log.info("'before' 시트를 생성했습니다.");
+                    createHeaderRow(targetSheet); // 헤더 생성
+                    insertMemberDataToSheet(targetSheet, memberList); // 데이터 입력
 
-                            // Name과 ID가 모두 일치하는 경우 데이터 업데이트
-                            if (nameCell != null && idCodeCell != null && nameCell.getStringCellValue().equals(member.getName()) && (int) idCodeCell.getNumericCellValue() == member.getIdCode()) {
-
-                                updateMemberData(row, member);
-                                isUpdated = true; // 업데이트 되었으므로 새로 추가하지 않음
-                                break; // 업데이트 후 루프 탈출
-                            }
-                        }
-                    }
-
-                    // 일치하는 데이터가 없으면 새 행 추가
-                    if (!isUpdated) {
-                        int newRowNum = sheet.getLastRowNum() + 1;
-                        Row newRow = sheet.createRow(newRowNum);
-                        insertNewMemberData(newRow, member);
-                        log.info("새로운 행에 데이터를 추가했습니다. (행 번호: {})", newRowNum);
-                    }
+                    // 2. 시트가 2개 이상인 경우
+                } else if (workbook.getNumberOfSheets() >= 2) {
+                    // 시트 개수 - 2를 사용하여 'after'라는 이름의 시트 생성
+                    String sheetName = "after" + (workbook.getNumberOfSheets() - 1);
+                    targetSheet = workbook.createSheet(sheetName);
+                    log.info("'{}' 시트를 생성했습니다.", sheetName);
+                    createHeaderRow(targetSheet); // 헤더 생성
+                    insertMemberDataToSheet(targetSheet, memberList); // 데이터 입력
                 }
 
                 // 변경된 데이터를 엑셀 파일에 저장
@@ -80,39 +76,45 @@ public class ExcelManager {
         }
     }
 
-    // 기존 행에 Member 데이터를 업데이트하는 메서드
-    private void updateMemberData(Row row, Member member) {
-        int currentColumn = 13; //시작 인덱스
-        boolean isDataInserted = false;
+    // 첫 번째 시트에 name과 idCode를 입력하는 메서드
+    private void insertFirstMemberDataToSheet(Sheet sheet, List<Member> memberList) {
+        int rowNum = 3; // 데이터는 두 번째 행부터 시작
 
-        // 13열부터 데이터가 있는지 확인하고, 없으면 데이터를 추가
-        while (!isDataInserted) {
-            Cell targetCell = row.getCell(currentColumn);
+        for (Member member : memberList) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(member.getName()); // Name 입력
+            row.createCell(1).setCellValue(member.getIdCode()); // ID Code 입력
+            row.createCell(2).setCellValue(member.getAlly()); // Ally 입력
+        }
 
-            if (targetCell == null || targetCell.getCellType() == CellType.BLANK) {
-                // 13열 혹은 다음 4열에서 빈 셀을 찾아 데이터를 추가
-                row.createCell(currentColumn).setCellValue(member.getKillPoint4T()); // Kill Point 4T (6번 열)
-                row.createCell(currentColumn + 1).setCellValue(member.getKillPoint5T()); // Kill Point 5T (7번 열)
-                row.createCell(currentColumn + 2).setCellValue(member.getDeath()); // death Point
+        log.info("첫 번째 시트에 name과 idCode를 입력했습니다.");
+    }
 
-                log.info("{}열에 데이터 추가됨", currentColumn + 1);
-                isDataInserted = true; // 데이터 추가 완료
-            } else {
-                // 해당 열에 데이터가 이미 있는 경우 4열 뒤로 이동
-                currentColumn += 4;
-            }
+    // 헤더 행을 만드는 메서드
+    private void createHeaderRow(Sheet sheet) {
+        Row headerRow = sheet.createRow(0); // 첫 번째 행 생성
+        String[] headers = {"Name", "IdCode", "Ally", "Power", "Kill Points 4T", "Kill Points 5T", "Death"};
+
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]); // 헤더를 입력
         }
     }
 
     // 새 행에 Member 데이터를 입력하는 메서드
-    private void insertNewMemberData(Row row, Member member) {
-        row.createCell(0).setCellValue(member.getName()); // Name 열 (1번 열)
-        row.createCell(1).setCellValue(member.getIdCode()); // ID Code 열 (0번 열)
-        row.createCell(2).setCellValue(member.getAlly()); // Ally 열 (3번 열)
-        row.createCell(3).setCellValue(member.getPower()); // Power 열 (4번 열)
-        row.createCell(4).setCellValue(member.getKillPoint4T()); // Kill Point 4T (6번 열)
-        row.createCell(5).setCellValue(member.getKillPoint5T()); // Kill Point 5T (7번 열)
-        row.createCell(6).setCellValue(member.getDeath()); // Kill death  (7번 열)
+    private void insertMemberDataToSheet(Sheet sheet, List<Member> memberList) {
+        int rowNum = 1; // 데이터는 두 번째 행부터 시작
+
+        for (Member member : memberList) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(member.getName());
+            row.createCell(1).setCellValue(member.getIdCode());
+            row.createCell(2).setCellValue(member.getAlly());
+            row.createCell(3).setCellValue(member.getPower());
+            row.createCell(4).setCellValue(member.getKillPoint4T());
+            row.createCell(5).setCellValue(member.getKillPoint5T());
+            row.createCell(6).setCellValue(member.getDeath());
+        }
     }
 
     public boolean isFileLocked(File file) {

@@ -3,7 +3,6 @@ package com.coffebara.summaryBot.manager;
 import com.coffebara.summaryBot.SummaryBotRunner;
 import com.coffebara.summaryBot.config.ExcelConfig;
 import com.coffebara.summaryBot.entity.Member;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,7 +56,7 @@ class ExcelManagerTest {
 
     @Test
     @DisplayName("")
-    void writeToExcel() throws Exception {
+    void insertToExcel() throws Exception {
         //given
         List<Member> memberList = new ManagedList<>();
         for (int i = 0; i < 10; i++) {
@@ -71,14 +70,14 @@ class ExcelManagerTest {
             int killPoint5T = 5000 * (50 - i);
             int totalKillPoint = killPoint4T * 4 + killPoint5T * 10;
 
-            Member member = new Member(name, ranking, "ㅁㄴㅇ", "ㅁㄴㅇ", "dasd");
+            Member member = new Member(name, ranking, "m.png", "d1.png", "d2.png");
             member.setMemberMainData(idCode, ally, power, death, totalKillPoint, killPoint4T, killPoint5T);
             memberList.add(member);
         }
 
 
         //when
-        excelManager.updateOrInsertMemberData(memberList);
+        excelManager.handleMemberData(memberList);
 
         //then
 
@@ -86,7 +85,7 @@ class ExcelManagerTest {
 
     @Test
     @DisplayName("")
-    void writeToExcelUpdate() throws Exception {
+    void updateToExcel() throws Exception {
         //given
         List<Member> memberList = new ManagedList<>();
         for (int i = 0; i < 10; i++) {
@@ -107,7 +106,7 @@ class ExcelManagerTest {
 
 
         //when
-        excelManager.updateOrInsertMemberData(memberList);
+        excelManager.handleMemberData(memberList);
 
         //then
 
