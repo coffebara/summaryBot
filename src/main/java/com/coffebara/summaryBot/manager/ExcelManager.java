@@ -2,6 +2,7 @@ package com.coffebara.summaryBot.manager;
 
 import com.coffebara.summaryBot.config.ExcelConfig;
 import com.coffebara.summaryBot.entity.Member;
+import com.coffebara.summaryBot.exception.ExcelException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
@@ -68,53 +69,62 @@ public class ExcelManager {
                 }
 
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new ExcelException("엑셀 데이터를 파일에 쓰는중 오류가 발생했습니다.", e);
             }
 
         } catch (InterruptedException e) {
-            log.error("파일 잠금 해제를 기다리는 동안 인터럽트가 발생했습니다.", e);
+            throw new ExcelException("파일 잠금 해제를 기다리는 동안 인터럽트가 발생했습니다.", e);
         }
     }
 
     // 첫 번째 시트에 name과 idCode를 입력하는 메서드
     private void insertFirstMemberDataToSheet(Sheet sheet, List<Member> memberList) {
-        int rowNum = 3; // 데이터는 두 번째 행부터 시작
-
-        for (Member member : memberList) {
-            Row row = sheet.createRow(rowNum++);
-            row.createCell(0).setCellValue(member.getName()); // Name 입력
-            row.createCell(1).setCellValue(member.getIdCode()); // ID Code 입력
-            row.createCell(2).setCellValue(member.getAlly()); // Ally 입력
+        try {
+            int rowNum = 3; // 데이터는 두 번째 행부터 시작
+            for (Member member : memberList) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(member.getName()); // Name 입력
+                row.createCell(1).setCellValue(member.getIdCode()); // ID Code 입력
+                row.createCell(2).setCellValue(member.getAlly()); // Ally 입력
+            }
+        } catch (Exception e) {
+            throw new ExcelException("첫 번째 시트에 데이터를 입력하는 중 오류가 발생했습니다.", e);
         }
-
-        log.info("첫 번째 시트에 name과 idCode를 입력했습니다.");
     }
 
     // 헤더 행을 만드는 메서드
     private void createHeaderRow(Sheet sheet) {
-        Row headerRow = sheet.createRow(0); // 첫 번째 행 생성
-        String[] headers = {"Name", "IdCode", "Ally", "Power", "Kill Points 4T", "Kill Points 5T", "Death"};
+        try {
+            Row headerRow = sheet.createRow(0); // 첫 번째 행 생성
+            String[] headers = {"Name", "IdCode", "Ally", "Power", "Kill Points 4T", "Kill Points 5T", "Death"};
 
-        for (int i = 0; i < headers.length; i++) {
-            Cell cell = headerRow.createCell(i);
-            cell.setCellValue(headers[i]); // 헤더를 입력
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]); // 헤더를 입력
+            }
+        } catch (Exception e) {
+            throw new ExcelException("엑셀 헤더 행을 생성하는 중 오류가 발생했습니다.", e);
         }
     }
 
     // 새 행에 Member 데이터를 입력하는 메서드
     private void insertMemberDataToSheet(Sheet sheet, List<Member> memberList) {
-        int rowNum = 1; // 데이터는 두 번째 행부터 시작
-
-        for (Member member : memberList) {
-            Row row = sheet.createRow(rowNum++);
-            row.createCell(0).setCellValue(member.getName());
-            row.createCell(1).setCellValue(member.getIdCode());
-            row.createCell(2).setCellValue(member.getAlly());
-            row.createCell(3).setCellValue(member.getPower());
-            row.createCell(4).setCellValue(member.getKillPoint4T());
-            row.createCell(5).setCellValue(member.getKillPoint5T());
-            row.createCell(6).setCellValue(member.getDeath());
+        try {
+            int rowNum = 1; // 데이터는 두 번째 행부터 시작
+            for (Member member : memberList) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(member.getName());
+                row.createCell(1).setCellValue(member.getIdCode());
+                row.createCell(2).setCellValue(member.getAlly());
+                row.createCell(3).setCellValue(member.getPower());
+                row.createCell(4).setCellValue(member.getKillPoint4T());
+                row.createCell(5).setCellValue(member.getKillPoint5T());
+                row.createCell(6).setCellValue(member.getDeath());
+            }
+        } catch (Exception e) {
+            throw new ExcelException("엑셀 시트에 데이터를 입력하는 중 오류가 발생했습니다.", e);
         }
+
     }
 
     public boolean isFileLocked(File file) {

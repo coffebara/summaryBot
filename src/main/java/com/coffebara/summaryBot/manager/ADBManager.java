@@ -250,7 +250,7 @@ public class ADBManager {
 
         //실행중인 디바이스가 없다면
         if (deviceId.isEmpty()) {
-            throw new DeviceException("디바이스가 꺼져있습니다.");
+            throw new DeviceException("디바이스가 꺼져있거나 연결되지 않았습니다.");
         }
         log.info("deviceId = " + deviceId);
 

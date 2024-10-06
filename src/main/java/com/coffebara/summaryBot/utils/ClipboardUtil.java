@@ -1,5 +1,6 @@
 package com.coffebara.summaryBot.utils;
 
+import com.coffebara.summaryBot.exception.ClipboardException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.awt.*;
@@ -19,7 +20,8 @@ public class ClipboardUtil {
         // Headless 모드인지 확인
         if (GraphicsEnvironment.isHeadless()) {
             log.error("클립보드 접근이 불가능한 환경입니다.");
-            return ""; // 빈 문자열 반환
+            throw new ClipboardException("클립보드 접근이 불가능한 환경입니다.");
+//            return ""; // 빈 문자열 반환
         }
 
         // 클립보드 객체 가져오기
@@ -38,7 +40,7 @@ public class ClipboardUtil {
                 log.error("클립보드에 텍스트가 없습니다.");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new ClipboardException("클립보드에 접근할 수 없습니다.");
         }
 
         return clipboardText;

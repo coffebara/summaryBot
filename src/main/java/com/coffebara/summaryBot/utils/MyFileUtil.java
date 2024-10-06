@@ -1,5 +1,6 @@
 package com.coffebara.summaryBot.utils;
 
+import com.coffebara.summaryBot.exception.FileAndDirectoryException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -17,7 +18,8 @@ public class MyFileUtil {
                 Files.createDirectories(path); // 모든 중간 디렉토리도 함께 생성
                 log.info("디렉토리가 생성되었습니다: " + directory);
             } catch (IOException e) {
-                log.info("디렉토리 생성 실패: " + e.getMessage());
+                log.error("디렉토리 생성 실패: " + e.getMessage());
+                throw new FileAndDirectoryException("디렉토리 생성 실패", e);
             }
         } else {
             log.info("디렉토리가 이미 존재합니다: " + directory);

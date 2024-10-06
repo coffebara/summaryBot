@@ -1,5 +1,6 @@
 package com.coffebara.summaryBot.utils;
 
+import com.coffebara.summaryBot.exception.OpenCVException;
 import lombok.extern.slf4j.Slf4j;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -18,7 +19,12 @@ public class OpenCVUtil {
 
     public static Mat binaryImage(Mat image) {
         Mat binary = new Mat();
-        Imgproc.threshold(image, binary, 150, 255, Imgproc.THRESH_BINARY);
+        try {
+            Imgproc.threshold(image, binary, 150, 255, Imgproc.THRESH_BINARY);
+        } catch (Exception e) {
+            throw new OpenCVException("이미지 처리 중 오류가 발생했습니다.", e);
+        }
+
         return binary;
     }
 
@@ -32,15 +38,20 @@ public class OpenCVUtil {
 
         if (x + w > image.cols() || y + h > image.rows()) {
             log.info("ROI가 이미지 범위를 초과합니다.");
-            return null;
+            throw new OpenCVException("ROI가 이미지 범위를 초과했습니다.");
         }
+
         Rect roi = new Rect(x, y, w, h);
         return new Mat(image, roi);
     }
 
     public static Mat zoomImage(Mat image) {
         Mat zoomedImage = new Mat();
-        Imgproc.resize(image, zoomedImage, new Size(image.cols() * 1.5, image.rows() * 1.5));
+        try {
+            Imgproc.resize(image, zoomedImage, new Size(image.cols() * 1.5, image.rows() * 1.5));
+        } catch (Exception e) {
+            throw new OpenCVException("이미지 처리 중 오류가 발생했습니다.", e);
+        }
 
         return zoomedImage;
     }

@@ -1,6 +1,7 @@
 package com.coffebara.summaryBot.manager;
 
 import com.coffebara.summaryBot.config.OCRConfig;
+import com.coffebara.summaryBot.exception.OCRException;
 import com.coffebara.summaryBot.utils.OpenCVUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -129,7 +130,6 @@ public class OCRManager {
             }
         }
 
-
         return list;
     }
 
@@ -151,10 +151,9 @@ public class OCRManager {
 
             return result;
         } catch (TesseractException e) {
-            System.out.println(e.getMessage());
+            throw new OCRException("OCR 처리 중 오류가 발생했습니다.", e);
         }
 
-        return null;
     }
 
 }
